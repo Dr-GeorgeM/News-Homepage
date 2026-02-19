@@ -1,11 +1,30 @@
-// Select necessary elements
-const navBarSide = document.querySelector(".navBarSide");
-const clickedNavBarSide = document.querySelector(".clicked-navBar");
-const overlay = document.querySelector(".overlay");
+const admin = require("firebase-admin");
+const serviceAccount = require("./serviceAccountKey.json");
 
-// Add event listener to navBarSide
-navBarSide.addEventListener("click", function() {
-  // Show clickedNavBarSide and overlay with a class of "active"
-  clickedNavBarSide.classList.add("active");
-  overlay.classList.add("active");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
 });
+
+const db = admin.firestore();
+
+async function createSeats() {
+  const batch = db.batch();
+  const totalSeats = 735;
+
+  for (let i = 1; i <= totalSeats; i++) {
+    const seatRef = db.collection("seats").doc(`seat_${i}`);
+
+    batch.set(seatRef, {
+      seatNumber: i,
+      row: Math.ceil(i / 21), // كل صف فيه 21 كرسي
+      status: "available",
+      reservedBy: null,
+      paymentStatus: "pending",
+    });
+  }
+
+  await batch.commit();
+  console.log("735 seats created successfully!");
+}
+
+createSeats();
